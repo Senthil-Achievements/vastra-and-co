@@ -50,6 +50,7 @@
     }
     body.day-mode .navbar-logo { color: #2a1800; }
     body.day-mode .navbar-links a { color: #3a2a10; }
+    body.day-mode .navbar-links .nav-item.is-active a { color: #0d0b09; }
     body.day-mode .hero-label { color: #8B6914; }
     body.day-mode .hero-line { color: #1a1a1a; }
     body.day-mode .hero-sub { color: #4a4a4a; }
@@ -238,13 +239,29 @@
     }
 
     .navbar-links {
+      position: relative;
       display: flex;
       flex-direction: row;
       list-style: none;
-      gap: 32px;
+      gap: 0;
+      padding: 4px;
+      border: 1px solid rgba(201, 168, 76, 0.22);
+      border-radius: 999px;
+      background: transparent;
+      transition: border-color 0.3s ease;
+    }
+
+    #navbar.scrolled .navbar-links {
+      border-color: rgba(201, 168, 76, 0.35);
+    }
+
+    .navbar-links .nav-item {
+      position: relative;
+      z-index: 1;
     }
 
     .navbar-links a {
+      display: block;
       font-family: 'DM Sans', sans-serif;
       font-weight: 300;
       font-size: 0.72rem;
@@ -252,11 +269,32 @@
       text-transform: uppercase;
       color: rgba(245, 239, 228, 0.7);
       text-decoration: none;
-      transition: color 0.3s ease;
+      padding: 8px 18px;
+      border-radius: 999px;
+      transition: color 0.35s ease;
     }
 
-    .navbar-links a:hover {
-      color: #C9A84C;
+    .navbar-links .nav-item.is-active a {
+      color: #0d0b09;
+    }
+
+    .navbar-cursor {
+      position: absolute;
+      top: 4px;
+      left: 0;
+      height: calc(100% - 8px);
+      width: 0;
+      background: #C9A84C;
+      border-radius: 999px;
+      opacity: 0;
+      transform: translateX(0);
+      transition:
+        transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.25s ease;
+      z-index: 0;
+      pointer-events: none;
+      list-style: none;
     }
 
     .navbar-cta {
@@ -1339,10 +1377,11 @@
     <nav id="navbar">
       <span class="navbar-logo">VASTRA &amp; CO.</span>
       <ul class="navbar-links">
-        <li><a href="#">Home</a></li>
-        <li><a href="#">Collections</a></li>
-        <li><a href="#">Fabrics</a></li>
-        <li><a href="#">Contact</a></li>
+        <li class="nav-item"><a href="#">Home</a></li>
+        <li class="nav-item"><a href="#">Collections</a></li>
+        <li class="nav-item"><a href="#">Fabrics</a></li>
+        <li class="nav-item"><a href="#">Contact</a></li>
+        <li class="navbar-cursor" aria-hidden="true"></li>
       </ul>
       <a href="#" class="navbar-cta">Book Appointment</a>
       <button class="theme-toggle" id="theme-toggle" aria-label="Toggle day/night mode">🌙</button>
@@ -1726,6 +1765,35 @@
         navbar.classList.remove('scrolled');
       }
     });
+
+    // 3b. Sliding-pill nav cursor
+    (function setupNavCursor() {
+      const list = document.querySelector('.navbar-links');
+      if (!list) return;
+      const cursor = list.querySelector('.navbar-cursor');
+      const items = list.querySelectorAll('.nav-item');
+      if (!cursor || !items.length) return;
+
+      const moveTo = (item) => {
+        const itemRect = item.getBoundingClientRect();
+        const listRect = list.getBoundingClientRect();
+        const borderLeft = parseFloat(getComputedStyle(list).borderLeftWidth) || 0;
+        cursor.style.width = `${itemRect.width}px`;
+        cursor.style.transform = `translateX(${itemRect.left - listRect.left - borderLeft}px)`;
+        cursor.style.opacity = '1';
+        items.forEach((i) => i.classList.remove('is-active'));
+        item.classList.add('is-active');
+      };
+
+      items.forEach((item) => {
+        item.addEventListener('mouseenter', () => moveTo(item));
+      });
+
+      list.addEventListener('mouseleave', () => {
+        cursor.style.opacity = '0';
+        items.forEach((i) => i.classList.remove('is-active'));
+      });
+    })();
 
     // 4. Preloader animation
     const statusMessages = [
