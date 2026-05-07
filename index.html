@@ -1,0 +1,2364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+
+  <!-- Three.js r128 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+  <!-- GSAP 3.12.5 + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #080604;
+      font-family: 'DM Sans', sans-serif;
+      color: #fff;
+      overflow-x: hidden;
+      cursor: none;
+      scroll-behavior: smooth;
+      transition: background 0.6s ease, color 0.6s ease;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Day mode */
+    body.day-mode {
+      background: #F5EFE4;
+      color: #1a1a1a;
+    }
+    body.day-mode #navbar.scrolled {
+      background: rgba(245, 239, 228, 0.88);
+      border-bottom-color: rgba(201, 168, 76, 0.3);
+    }
+    body.day-mode .navbar-logo { color: #2a1800; }
+    body.day-mode .navbar-links a { color: #3a2a10; }
+    body.day-mode .hero-label { color: #8B6914; }
+    body.day-mode .hero-line { color: #1a1a1a; }
+    body.day-mode .hero-sub { color: #4a4a4a; }
+    body.day-mode .section-heading,
+    body.day-mode .testi-heading,
+    body.day-mode .contact-heading { color: #1a1a1a; }
+    body.day-mode .col-card { background: rgba(255,255,255,0.5); }
+    body.day-mode .card-gradient {
+      background: linear-gradient(to top, rgba(245,239,228,0.92), transparent);
+    }
+    body.day-mode .card-name { color: #1a1a1a; }
+    body.day-mode .feature-card {
+      background: rgba(255,255,255,0.35);
+      border-color: rgba(201,168,76,0.25);
+    }
+    body.day-mode .feature-card:hover {
+      background: rgba(255,255,255,0.55);
+    }
+    body.day-mode .feature-title { color: #1a1a1a; }
+    body.day-mode .feature-desc { color: #4a4a4a; }
+    body.day-mode .testi-card {
+      background: rgba(255,255,255,0.35);
+      border-color: rgba(201,168,76,0.25);
+    }
+    body.day-mode .testi-text { color: #2a2a2a; }
+    body.day-mode .testi-author { color: #8B6914; }
+    body.day-mode .contact-form {
+      background: rgba(255,255,255,0.35);
+      border-color: rgba(201,168,76,0.25);
+    }
+    body.day-mode .stat-number { color: #8B6914; }
+    body.day-mode .fabric-name { color: #1a1a1a; }
+    body.day-mode .fabric-desc { color: #4a4a4a; }
+    body.day-mode #footer { background: rgba(245,239,228,0.97); }
+    body.day-mode .footer-bottom { color: rgba(26,26,26,0.4); }
+
+    /* Day/Night Toggle */
+    .theme-toggle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      transition: all 0.4s ease;
+      margin-left: 16px;
+      position: relative;
+      z-index: 1001;
+    }
+    .theme-toggle:hover {
+      border-color: #C9A84C;
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(201,168,76,0.2);
+    }
+    body.day-mode .theme-toggle {
+      background: rgba(0,0,0,0.06);
+      border-color: rgba(201,168,76,0.4);
+    }
+
+    #cursor-dot {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      background: #C9A84C;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      top: 0;
+      left: 0;
+    }
+
+    #cursor-ring {
+      position: fixed;
+      width: 30px;
+      height: 30px;
+      border: 1.5px solid #C9A84C;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      top: 0;
+      left: 0;
+      transition: width 0.25s, height 0.25s, background 0.2s;
+    }
+
+    body.cursor-hover #cursor-ring {
+      width: 52px;
+      height: 52px;
+      background: rgba(201, 168, 76, 0.12);
+    }
+
+    #webgl-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      opacity: 1;
+    }
+
+    #content {
+      position: relative;
+      z-index: 1;
+    }
+
+    #preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0D0B09;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preloader-title {
+      font-family: 'Cormorant Garamond', serif;
+      color: #C9A84C;
+      font-size: 1.5rem;
+      font-weight: 400;
+      letter-spacing: 0.4em;
+      margin-bottom: 2rem;
+    }
+
+    .preloader-track {
+      width: 300px;
+      height: 1px;
+      background: rgba(201, 168, 76, 0.15);
+    }
+
+    #preloader-bar {
+      width: 0%;
+      height: 100%;
+      background: #C9A84C;
+    }
+
+    #preloader-status {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: rgba(245, 239, 228, 0.4);
+      margin-top: 1.5rem;
+    }
+
+    /* Navbar */
+    #navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 20px 5vw;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      background: transparent;
+      transition: background 0.4s ease, border-bottom 0.4s ease;
+      border-bottom: 1px solid transparent;
+    }
+
+    #navbar.scrolled {
+      background: rgba(13, 11, 9, 0.6);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border-bottom: 1px solid rgba(201, 168, 76, 0.18);
+    }
+
+    .navbar-logo {
+      font-family: 'Cormorant Garamond', serif;
+      color: #C9A84C;
+      letter-spacing: 0.35em;
+      font-size: 1rem;
+      text-transform: uppercase;
+    }
+
+    .navbar-links {
+      display: flex;
+      flex-direction: row;
+      list-style: none;
+      gap: 32px;
+    }
+
+    .navbar-links a {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(245, 239, 228, 0.7);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .navbar-links a:hover {
+      color: #C9A84C;
+    }
+
+    .navbar-cta {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #C9A84C;
+      border: 1px solid #C9A84C;
+      padding: 7px 20px;
+      text-decoration: none;
+      background: transparent;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .navbar-cta:hover {
+      background: rgba(201, 168, 76, 0.1);
+    }
+
+    .navbar-hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    .navbar-hamburger span {
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: #C9A84C;
+    }
+
+    @media (max-width: 768px) {
+      .navbar-links,
+      .navbar-cta {
+        display: none;
+      }
+
+      .navbar-hamburger {
+        display: flex;
+      }
+    }
+
+    /* Hero */
+    #hero {
+      min-height: 100vh;
+      padding: 140px 5vw 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      background: transparent;
+    }
+
+
+
+    #hero > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-line,
+    .hero-label,
+    .hero-sub,
+    .hero-ctas,
+    .scroll-indicator {
+      position: relative;
+      z-index: 20;
+    }
+
+    .hero-label {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 0.7rem;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: #C9A84C;
+      margin-bottom: 32px;
+      opacity: 0;
+    }
+
+    .hero-heading-wrap {
+      overflow: hidden;
+    }
+
+    .hero-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: clamp(3.8rem, 9vw, 8.5rem);
+      line-height: 1.05;
+      color: #F5EFE4;
+      text-shadow: 0 0 80px rgba(201, 168, 76, 0.12);
+    }
+
+    .hero-line {
+      clip-path: inset(0 100% 0 0);
+    }
+
+    .hero-heading.italic {
+      font-style: italic;
+    }
+
+    .hero-heading.outline {
+      -webkit-text-stroke: 1.5px #D4AE55;
+      color: transparent;
+    }
+
+    .hero-heading.gold {
+      color: #D4AE55;
+    }
+
+    .hero-heading.italic {
+      color: #FAF5EC;
+    }
+
+    .hero-paragraph {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 1rem;
+      line-height: 1.75;
+      color: rgba(245, 239, 228, 0.65);
+      max-width: 460px;
+      margin-top: 32px;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .hero-buttons {
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+      margin-top: 40px;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .hero-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 14px 32px;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .hero-btn.primary {
+      background: #C9A84C;
+      color: #0D0B09;
+    }
+
+    .hero-btn.secondary {
+      background: transparent;
+      border: 1px solid #C9A84C;
+      color: #C9A84C;
+    }
+
+    .hero-btn:hover {
+      opacity: 0.85;
+    }
+
+    .hero-scroll {
+      position: absolute;
+      bottom: 40px;
+      left: 5vw;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+    }
+
+    .hero-scroll-line {
+      width: 40px;
+      height: 1px;
+      background: #C9A84C;
+    }
+
+    .hero-scroll-text {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(201, 168, 76, 0.6);
+      font-variant-caps: all-small-caps;
+    }
+
+    /* Marquee Strip */
+    #marquee-strip {
+      width: 100%;
+      background: #C9A84C;
+      padding: 13px 0;
+      overflow: hidden;
+    }
+
+    .marquee-track {
+      display: flex;
+      white-space: nowrap;
+      animation: marqueeScroll 28s linear infinite;
+    }
+
+    .marquee-track span {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #0D0B09;
+      flex-shrink: 0;
+    }
+
+    @keyframes marqueeScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* Collections */
+    #collections {
+      padding: 120px 5vw;
+    }
+
+    .collections-eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #C9A84C;
+      margin-bottom: 16px;
+    }
+
+    .collections-heading.section-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-style: italic;
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      color: #F5EFE4;
+      position: relative;
+      display: inline-block;
+      padding-bottom: 20px;
+    }
+
+    .collections-heading.section-heading::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 1px;
+      background: #C9A84C;
+    }
+
+    .collections-grid {
+      display: grid;
+      grid-template-columns: 2fr 1.4fr 1fr;
+      grid-template-rows: 380px 280px;
+      gap: 16px;
+      margin-top: 64px;
+    }
+
+    .col-card {
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+      position: relative;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(24px) saturate(1.5);
+      -webkit-backdrop-filter: blur(24px) saturate(1.5);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: transform 0.5s ease, box-shadow 0.5s ease, background 0.6s ease;
+      border-radius: 16px;
+    }
+
+    .col-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 60px rgba(201, 168, 76, 0.15);
+    }
+
+    .col-card:first-child {
+      grid-row: 1 / 3;
+    }
+
+    .card-swatch {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .card-gradient {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60%;
+      background: linear-gradient(to top, rgba(13, 11, 9, 0.92), transparent);
+    }
+
+    .card-name {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 1.4rem;
+      color: #F5EFE4;
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #C9A84C;
+      border: 1px solid rgba(201, 168, 76, 0.25);
+      padding: 4px 10px;
+      background: rgba(13, 11, 9, 0.6);
+    }
+
+    .card-hover {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(201, 168, 76, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .card-hover span {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #C9A84C;
+      border: 1px solid #C9A84C;
+      padding: 10px 28px;
+    }
+
+    .col-card:hover .card-hover {
+      opacity: 1;
+    }
+
+    /* Swatch patterns with generated images */
+    .swatch-silk {
+      background: url('silk_saree_1778141881612.png') center/cover no-repeat;
+    }
+
+    .swatch-cotton {
+      background: url('cotton_handloom_1778141900279.png') center/cover no-repeat;
+    }
+
+    .swatch-dress {
+      background: url('raw_cotton_1778141937796.png') center/cover no-repeat;
+    }
+
+    .swatch-ethnic {
+      background: url('ethnic_suits_1778142534712.png') center/cover no-repeat;
+    }
+
+    .swatch-bridal {
+      background: url('bridal_collection_1778141919299.png') center/cover no-repeat;
+    }
+
+    @media (max-width: 768px) {
+      .collections-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+      }
+
+      .col-card {
+        min-height: 260px;
+      }
+
+      .col-card:first-child {
+        grid-row: auto;
+      }
+    }
+
+    /* Fabric Section */
+    #fabric-section {
+      padding: 120px 5vw;
+    }
+
+    .fabric-eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #C9A84C;
+      margin-bottom: 16px;
+    }
+
+    .fabric-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-style: italic;
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      color: #F5EFE4;
+      margin-bottom: 64px;
+    }
+
+    .fabric-panel {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 60px;
+      margin-bottom: 80px;
+      border-bottom: 1px solid rgba(201, 168, 76, 0.1);
+      padding-bottom: 80px;
+    }
+
+    .fabric-panel:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .fabric-text {
+      flex: 1;
+    }
+
+    .fabric-number {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      color: rgba(201, 168, 76, 0.4);
+    }
+
+    .fabric-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-style: italic;
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      color: #F5EFE4;
+      margin: 12px 0;
+      line-height: 1.1;
+    }
+
+    .fabric-desc {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: rgba(245, 239, 228, 0.6);
+      max-width: 380px;
+      margin-bottom: 24px;
+    }
+
+    .fabric-tags {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .fabric-tag {
+      border: 1px solid rgba(201, 168, 76, 0.18);
+      color: #C9A84C;
+      padding: 6px 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.64rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .fabric-swatch {
+      width: 300px;
+      height: 400px;
+      flex-shrink: 0;
+      border: 1px solid rgba(201, 168, 76, 0.18);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .fabric-swatch::before {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      border: 1px solid rgba(201, 168, 76, 0.1);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .fabric-swatch-pattern {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .fabric-swatch-label {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 0.9rem;
+      color: #C9A84C;
+      z-index: 2;
+    }
+
+    /* Fabric swatch patterns with generated images */
+    .fswatch-cotton {
+      background: url('raw_cotton_1778141937796.png') center/cover no-repeat;
+    }
+
+    .fswatch-kanjivaram {
+      background: url('silk_saree_1778141881612.png') center/cover no-repeat;
+    }
+
+    .fswatch-chanderi {
+      background: url('cotton_handloom_1778141900279.png') center/cover no-repeat;
+    }
+
+    .fswatch-linen {
+      background: url('linen_weave_1778142552455.png') center/cover no-repeat;
+    }
+
+    @media (max-width: 768px) {
+      .fabric-panel {
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      .fabric-swatch {
+        width: 100%;
+        height: 260px;
+      }
+    }
+
+    /* Stats Section */
+    #stats-section {
+      padding: 120px 5vw;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 60px 40px;
+      border-right: 1px solid rgba(201, 168, 76, 0.18);
+    }
+
+    .stat-item:last-child {
+      border-right: none;
+    }
+
+    .stat-number {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      color: #C9A84C;
+      display: block;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .stat-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(245, 239, 228, 0.45);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 80px;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(24px) saturate(1.5);
+      -webkit-backdrop-filter: blur(24px) saturate(1.5);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      border-left: 3px solid #C9A84C;
+      padding: 36px 32px;
+      border-radius: 16px;
+      transition: transform 0.4s ease, background 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+      background: rgba(201, 168, 76, 0.08);
+      box-shadow: 0 12px 40px rgba(201,168,76,0.1);
+    }
+
+    .feature-icon {
+      font-size: 1.6rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .feature-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-size: 1.3rem;
+      color: #F5EFE4;
+      margin-bottom: 10px;
+    }
+
+    .feature-desc {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: rgba(245, 239, 228, 0.55);
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .stat-item:nth-child(2) {
+        border-right: none;
+      }
+
+      .stat-item:nth-child(1),
+      .stat-item:nth-child(2) {
+        border-bottom: 1px solid rgba(201, 168, 76, 0.18);
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Testimonials */
+    #testimonials {
+      padding: 120px 5vw;
+    }
+
+    .testi-header {
+      text-align: center;
+      margin-bottom: 72px;
+    }
+
+    .testi-eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #C9A84C;
+    }
+
+    .testi-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-style: italic;
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      color: #F5EFE4;
+      margin-top: 12px;
+    }
+
+    .testi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .testi-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(24px) saturate(1.5);
+      -webkit-backdrop-filter: blur(24px) saturate(1.5);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      border-top: 1px solid rgba(201, 168, 76, 0.4);
+      padding: 40px 32px 32px;
+      position: relative;
+      border-radius: 16px;
+      transition: transform 0.4s ease, box-shadow 0.4s ease, background 0.6s ease;
+    }
+
+    .testi-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(201,168,76,0.08);
+    }
+
+    .testi-quote-mark {
+      position: absolute;
+      top: 12px;
+      left: 24px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 7rem;
+      color: #C9A84C;
+      opacity: 0.18;
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .testi-text {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-style: italic;
+      font-size: 0.95rem;
+      line-height: 1.85;
+      color: rgba(245, 239, 228, 0.72);
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .testi-name {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #C9A84C;
+    }
+
+    .testi-city {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem;
+      color: rgba(245, 239, 228, 0.35);
+      margin-top: 4px;
+    }
+
+    @media (max-width: 768px) {
+      .testi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Contact */
+    #contact {
+      padding: 120px 5vw;
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 80px;
+      align-items: start;
+    }
+
+    .contact-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-style: italic;
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      color: #F5EFE4;
+      margin-bottom: 40px;
+    }
+
+    .contact-detail {
+      border-left: 2px solid #C9A84C;
+      padding-left: 16px;
+      margin-bottom: 24px;
+    }
+
+    .contact-detail-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #8A6E2F;
+      margin-bottom: 4px;
+    }
+
+    .contact-detail-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      color: rgba(245, 239, 228, 0.75);
+      line-height: 1.5;
+    }
+
+    .whatsapp-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #25D366;
+      color: #fff;
+      border-radius: 50px;
+      padding: 13px 28px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+      margin-top: 8px;
+    }
+
+    .whatsapp-btn:hover {
+      background: #1ebe5b;
+      transform: translateY(-2px);
+    }
+
+    .whatsapp-btn svg {
+      flex-shrink: 0;
+    }
+
+    .contact-hours {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+      color: rgba(245, 239, 228, 0.35);
+      letter-spacing: 0.06em;
+      margin-top: 20px;
+    }
+
+    .contact-form {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(24px) saturate(1.5);
+      -webkit-backdrop-filter: blur(24px) saturate(1.5);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      border-radius: 16px;
+      padding: 48px 40px;
+      transition: background 0.6s ease;
+    }
+
+    .form-group {
+      position: relative;
+      margin-bottom: 36px;
+    }
+
+    .form-group label {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 0.95rem;
+      color: rgba(245, 239, 228, 0.35);
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+
+    .form-group input:focus ~ label,
+    .form-group input:not(:placeholder-shown) ~ label,
+    .form-group select:focus ~ label,
+    .form-group select:valid ~ label,
+    .form-group textarea:focus ~ label,
+    .form-group textarea:not(:placeholder-shown) ~ label {
+      top: -14px;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #C9A84C;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(201, 168, 76, 0.25);
+      color: #F5EFE4;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 0.95rem;
+      padding: 10px 0;
+      outline: none;
+      transition: border-bottom-color 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-bottom-color: #C9A84C;
+    }
+
+    .form-group select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .form-group select option {
+      background: #141210;
+      color: #F5EFE4;
+    }
+
+    .form-group textarea {
+      height: 90px;
+      resize: none;
+    }
+
+    .form-submit {
+      width: 100%;
+      background: #C9A84C;
+      color: #0D0B09;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 500;
+      font-size: 1rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      padding: 18px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    .form-submit:hover {
+      background: #d4b055;
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      #contact {
+        grid-template-columns: 1fr;
+        gap: 48px;
+      }
+
+      .contact-form {
+        padding: 36px 24px;
+      }
+    }
+
+    /* Footer */
+    #footer {
+      background: rgba(8, 7, 6, 0.97);
+      border-top: 1px solid rgba(201, 168, 76, 0.18);
+      padding: 72px 5vw 32px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 60px;
+      padding-bottom: 48px;
+      border-bottom: 1px solid rgba(201, 168, 76, 0.1);
+      margin-bottom: 32px;
+    }
+
+    .footer-brand-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-size: 1.1rem;
+      letter-spacing: 0.38em;
+      color: #C9A84C;
+      margin-bottom: 14px;
+    }
+
+    .footer-tagline {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 0.88rem;
+      color: rgba(245, 239, 228, 0.45);
+      max-width: 220px;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .footer-badge {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #8A6E2F;
+    }
+
+    .footer-col-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: #C9A84C;
+      margin-bottom: 24px;
+    }
+
+    .footer-links {
+      list-style: none;
+    }
+
+    .footer-links li {
+      margin-bottom: 14px;
+    }
+
+    .footer-links a {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 0.85rem;
+      color: rgba(245, 239, 228, 0.5);
+      text-decoration: none;
+      transition: color 0.3s ease, padding-left 0.3s ease;
+    }
+
+    .footer-links a:hover {
+      color: #C9A84C;
+      padding-left: 6px;
+    }
+
+    .footer-social-text {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      color: rgba(245, 239, 228, 0.35);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .footer-social-icons {
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+    }
+
+    .footer-social-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(201, 168, 76, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 0.7rem;
+      color: rgba(245, 239, 228, 0.5);
+      text-decoration: none;
+      transition: border-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+    }
+
+    .footer-social-icon:hover {
+      border-color: #C9A84C;
+      color: #C9A84C;
+      transform: scale(1.15);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 0.72rem;
+      color: rgba(245, 239, 228, 0.22);
+      letter-spacing: 0.06em;
+    }
+
+    @media (max-width: 768px) {
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <canvas id="webgl-canvas"></canvas>
+
+  <!-- Spline iframe removed due to Access Denied error -->
+  <div id="spline-embed" style="display:none;"></div>
+
+  <div id="content">
+
+    <nav id="navbar">
+      <span class="navbar-logo">VASTRA &amp; CO.</span>
+      <ul class="navbar-links">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Collections</a></li>
+        <li><a href="#">Fabrics</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+      <a href="#" class="navbar-cta">Book Appointment</a>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle day/night mode">🌙</button>
+      <button class="navbar-hamburger" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </nav>
+
+    <section id="hero">
+      <div class="hero-label">EST. 1994 &nbsp;&middot;&nbsp; ERODE, TAMIL NADU</div>
+
+      <div class="hero-heading-wrap">
+        <div class="hero-heading hero-line italic">The Art of</div>
+      </div>
+      <div class="hero-heading-wrap">
+        <div class="hero-heading hero-line outline">Handwoven</div>
+      </div>
+      <div class="hero-heading-wrap">
+        <div class="hero-heading hero-line gold">Tradition</div>
+      </div>
+
+      <p class="hero-paragraph hero-sub">From the looms of Tamil Nadu &mdash; pure cotton, silk, and handloom fabrics crafted for those who wear their heritage.</p>
+
+      <div class="hero-buttons hero-ctas">
+        <a href="#" class="hero-btn primary">Explore Collections</a>
+        <a href="#" class="hero-btn secondary">Our Story &rarr;</a>
+      </div>
+
+      <div class="hero-scroll scroll-indicator">
+        <div class="hero-scroll-line"></div>
+        <span class="hero-scroll-text">Scroll</span>
+      </div>
+    </section>
+
+    <div id="marquee-strip">
+      <div class="marquee-track">
+        <span>HANDLOOM &nbsp;&#10038;&nbsp; COTTON SAREES &nbsp;&#10038;&nbsp; SILK BLENDS &nbsp;&#10038;&nbsp; WHOLESALE &nbsp;&#10038;&nbsp; CUSTOM ORDERS &nbsp;&#10038;&nbsp; ETHNIC WEAR &nbsp;&#10038;&nbsp; PREMIUM QUALITY &nbsp;&#10038;&nbsp; </span>
+        <span>HANDLOOM &nbsp;&#10038;&nbsp; COTTON SAREES &nbsp;&#10038;&nbsp; SILK BLENDS &nbsp;&#10038;&nbsp; WHOLESALE &nbsp;&#10038;&nbsp; CUSTOM ORDERS &nbsp;&#10038;&nbsp; ETHNIC WEAR &nbsp;&#10038;&nbsp; PREMIUM QUALITY &nbsp;&#10038;&nbsp; </span>
+      </div>
+    </div>
+
+    <section id="collections">
+      <div class="collections-eyebrow section-eyebrow">Season 2025 &middot; Handpicked Weaves</div>
+      <h2 class="collections-heading section-heading">Collections</h2>
+
+      <div class="collections-grid">
+        <div class="col-card">
+          <div class="card-swatch swatch-silk"></div>
+          <div class="card-gradient"></div>
+          <div class="card-name">Silk Sarees</div>
+          <div class="card-badge">48 Styles</div>
+          <div class="card-hover"><span>Explore &rarr;</span></div>
+        </div>
+        <div class="col-card">
+          <div class="card-swatch swatch-cotton"></div>
+          <div class="card-gradient"></div>
+          <div class="card-name">Cotton Handloom</div>
+          <div class="card-badge">36 Styles</div>
+          <div class="card-hover"><span>Explore &rarr;</span></div>
+        </div>
+        <div class="col-card">
+          <div class="card-swatch swatch-dress"></div>
+          <div class="card-gradient"></div>
+          <div class="card-name">Dress Materials</div>
+          <div class="card-badge">24 Styles</div>
+          <div class="card-hover"><span>Explore &rarr;</span></div>
+        </div>
+        <div class="col-card">
+          <div class="card-swatch swatch-ethnic"></div>
+          <div class="card-gradient"></div>
+          <div class="card-name">Ethnic Suits</div>
+          <div class="card-badge">18 Styles</div>
+          <div class="card-hover"><span>Explore &rarr;</span></div>
+        </div>
+        <div class="col-card">
+          <div class="card-swatch swatch-bridal"></div>
+          <div class="card-gradient"></div>
+          <div class="card-name">Bridal Collection</div>
+          <div class="card-badge">12 Styles</div>
+          <div class="card-hover"><span>Explore &rarr;</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="fabric-section">
+      <div class="fabric-eyebrow">The Fabric Story</div>
+      <h2 class="fabric-heading">Our Weaves</h2>
+
+      <div id="fabric-panels-track">
+
+        <div class="fabric-panel">
+          <div class="fabric-text">
+            <div class="fabric-number">01</div>
+            <div class="fabric-name fabric-panel-name">Raw Cotton</div>
+            <p class="fabric-desc">Hand-picked and handspun from the fields of Erode. A breathable weave that carries the warmth of the earth in every thread.</p>
+            <div class="fabric-tags">
+              <span class="fabric-tag">Breathable</span>
+              <span class="fabric-tag">Handspun</span>
+              <span class="fabric-tag">240 GSM</span>
+            </div>
+          </div>
+          <div class="fabric-swatch fabric-swatch-card">
+            <div class="fabric-swatch-pattern fswatch-cotton"></div>
+            <div class="fabric-swatch-label">Raw Cotton</div>
+          </div>
+        </div>
+
+        <div class="fabric-panel">
+          <div class="fabric-text">
+            <div class="fabric-number">02</div>
+            <div class="fabric-name fabric-panel-name">Kanjivaram Silk</div>
+            <p class="fabric-desc">Pure mulberry silk interlaced with real zari. Every drape is an heirloom passed through generations.</p>
+            <div class="fabric-tags">
+              <span class="fabric-tag">Pure Silk</span>
+              <span class="fabric-tag">Zari Work</span>
+              <span class="fabric-tag">Heirloom</span>
+            </div>
+          </div>
+          <div class="fabric-swatch fabric-swatch-card">
+            <div class="fabric-swatch-pattern fswatch-kanjivaram"></div>
+            <div class="fabric-swatch-label">Kanjivaram Silk</div>
+          </div>
+        </div>
+
+        <div class="fabric-panel">
+          <div class="fabric-text">
+            <div class="fabric-number">03</div>
+            <div class="fabric-name fabric-panel-name">Chanderi Blend</div>
+            <p class="fabric-desc">Delicate and sheer, woven with a blend of silk and cotton. Perfect for festive occasions that call for elegance.</p>
+            <div class="fabric-tags">
+              <span class="fabric-tag">Lightweight</span>
+              <span class="fabric-tag">Sheer</span>
+              <span class="fabric-tag">Festival Wear</span>
+            </div>
+          </div>
+          <div class="fabric-swatch fabric-swatch-card">
+            <div class="fabric-swatch-pattern fswatch-chanderi"></div>
+            <div class="fabric-swatch-label">Chanderi Blend</div>
+          </div>
+        </div>
+
+        <div class="fabric-panel">
+          <div class="fabric-text">
+            <div class="fabric-number">04</div>
+            <div class="fabric-name fabric-panel-name">Linen Weave</div>
+            <p class="fabric-desc">Textured, earthy, and effortlessly graceful. A year-round companion for those who seek understated beauty.</p>
+            <div class="fabric-tags">
+              <span class="fabric-tag">Textured</span>
+              <span class="fabric-tag">Earthy</span>
+              <span class="fabric-tag">All Season</span>
+            </div>
+          </div>
+          <div class="fabric-swatch fabric-swatch-card">
+            <div class="fabric-swatch-pattern fswatch-linen"></div>
+            <div class="fabric-swatch-label">Linen Weave</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="stats-section">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-number">500+</span>
+          <span class="stat-label">Unique Designs</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">30</span>
+          <span class="stat-label">Years of Craft</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">12K+</span>
+          <span class="stat-label">Happy Families</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">100%</span>
+          <span class="stat-label">Handloom Certified</span>
+        </div>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <span class="feature-icon">&#129527;</span>
+          <div class="feature-title">Direct from Loom</div>
+          <p class="feature-desc">No middlemen. Straight from weavers to you.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">&#127912;</span>
+          <div class="feature-title">Custom Dyeing</div>
+          <p class="feature-desc">Your color, your fabric, your identity.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">&#128666;</span>
+          <div class="feature-title">Pan-India Delivery</div>
+          <p class="feature-desc">Doorstep delivery across all of India.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="testimonials">
+      <div class="testi-header">
+        <div class="testi-eyebrow">What Our Customers Say</div>
+        <h2 class="testi-heading">Worn With Love</h2>
+      </div>
+
+      <div class="testi-grid">
+        <div class="testi-card">
+          <span class="testi-quote-mark">&ldquo;</span>
+          <p class="testi-text">The Kanjivaram saree I ordered was beyond beautiful. The zari work is extraordinary and the silk quality is unmatched.</p>
+          <div class="testi-name">Meena Raghavan</div>
+          <div class="testi-city">Chennai</div>
+        </div>
+        <div class="testi-card">
+          <span class="testi-quote-mark">&ldquo;</span>
+          <p class="testi-text">Been buying cotton handloom from Vastra &amp; Co. for 10 years. Consistent quality, honest pricing, always delivered on time.</p>
+          <div class="testi-name">Priya Sundaram</div>
+          <div class="testi-city">Bengaluru</div>
+        </div>
+        <div class="testi-card">
+          <span class="testi-quote-mark">&ldquo;</span>
+          <p class="testi-text">Ordered custom fabric for my daughter&rsquo;s wedding. They matched the color perfectly. Will recommend to everyone I know.</p>
+          <div class="testi-name">Lakshmi Anand</div>
+          <div class="testi-city">Coimbatore</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="contact-left">
+        <h2 class="contact-heading">Get In Touch</h2>
+
+        <div class="contact-detail">
+          <div class="contact-detail-label">Address</div>
+          <div class="contact-detail-value">14, Loom Street, Erode &mdash; 638001, Tamil Nadu</div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-detail-label">Phone</div>
+          <div class="contact-detail-value">+91 98765 43210</div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-detail-label">Email</div>
+          <div class="contact-detail-value">hello@vastraandco.in</div>
+        </div>
+
+        <a href="#" class="whatsapp-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          Chat on WhatsApp
+        </a>
+
+        <div class="contact-hours">Mon &ndash; Sat: 9AM to 7PM &nbsp;&middot;&nbsp; Sun: 10AM to 4PM</div>
+      </div>
+
+      <div class="contact-form">
+        <div class="form-group">
+          <input type="text" id="form-name" placeholder=" " required>
+          <label for="form-name">Name</label>
+        </div>
+        <div class="form-group">
+          <input type="tel" id="form-phone" placeholder=" " required>
+          <label for="form-phone">Phone</label>
+        </div>
+        <div class="form-group">
+          <select id="form-collection" required>
+            <option value="" disabled selected hidden></option>
+            <option value="silk">Silk Sarees</option>
+            <option value="cotton">Cotton Handloom</option>
+            <option value="dress">Dress Materials</option>
+            <option value="suits">Ethnic Suits</option>
+            <option value="bridal">Bridal</option>
+            <option value="other">Other</option>
+          </select>
+          <label for="form-collection">Collection Interest</label>
+        </div>
+        <div class="form-group">
+          <textarea id="form-message" placeholder=" "></textarea>
+          <label for="form-message">Message</label>
+        </div>
+        <button type="submit" class="form-submit">Send Enquiry</button>
+      </div>
+    </section>
+
+    <footer id="footer">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-brand-name">VASTRA &amp; CO.</div>
+          <div class="footer-tagline">Where every thread tells a story.</div>
+          <div class="footer-badge">Est. 1994 &middot; Erode, TN</div>
+        </div>
+
+        <div class="footer-col">
+          <div class="footer-col-title">Quick Links</div>
+          <ul class="footer-links">
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Collections</a></li>
+            <li><a href="#">Fabrics</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <div class="footer-col-title">Follow Our Journey</div>
+          <div class="footer-social-text">Behind the scenes of India&rsquo;s finest handloom house.</div>
+          <div class="footer-social-icons">
+            <a href="#" class="footer-social-icon">IG</a>
+            <a href="#" class="footer-social-icon">YT</a>
+            <a href="#" class="footer-social-icon">WA</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">&copy; 2025 Vastra &amp; Co. &middot; Crafted in Tamil Nadu</div>
+    </footer>
+
+    <div id="preloader">
+      <div class="preloader-title">VASTRA &amp; CO.</div>
+      <div class="preloader-track">
+        <div id="preloader-bar"></div>
+      </div>
+      <div id="preloader-status">Preparing threads...</div>
+    </div>
+
+  </div>
+
+  <script>
+    // 1. Register GSAP plugin
+    gsap.registerPlugin(ScrollTrigger);
+
+    // 2. Custom cursor
+    const cursorDot = document.getElementById('cursor-dot');
+    const cursorRing = document.getElementById('cursor-ring');
+
+    document.addEventListener('mousemove', (e) => {
+      gsap.to(cursorDot, { x: e.clientX, y: e.clientY, duration: 0.05 });
+      gsap.to(cursorRing, { x: e.clientX - 15, y: e.clientY - 15, duration: 0.18 });
+    });
+
+    document.querySelectorAll('a, button').forEach((el) => {
+      el.addEventListener('mouseenter', () => {
+        document.body.classList.add('cursor-hover');
+      });
+      el.addEventListener('mouseleave', () => {
+        document.body.classList.remove('cursor-hover');
+      });
+    });
+
+    // Day/Night theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    let isDay = false;
+    themeToggle.addEventListener('click', () => {
+      isDay = !isDay;
+      document.body.classList.toggle('day-mode', isDay);
+      themeToggle.textContent = isDay ? '☀️' : '🌙';
+      
+      // Update Three.js background
+      if (typeof renderer !== 'undefined') {
+        gsap.to({ r: isDay ? 0.031 : 0.96, g: isDay ? 0.024 : 0.94, b: isDay ? 0.016 : 0.89 }, {
+          r: isDay ? 0.96 : 0.031,
+          g: isDay ? 0.94 : 0.024,
+          b: isDay ? 0.89 : 0.016,
+          duration: 0.8,
+          onUpdate: function() {
+            const t = this.targets()[0];
+            renderer.setClearColor(new THREE.Color(t.r, t.g, t.b), 1);
+          }
+        });
+      }
+    });
+
+    // 3. Navbar scroll effect
+    window.addEventListener('scroll', () => {
+      const navbar = document.getElementById('navbar');
+      if (window.scrollY > 60) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+
+    // 4. Preloader animation
+    const statusMessages = [
+      "Preparing threads...",
+      "Weaving the scene...",
+      "Adding light & texture...",
+      "Dyeing the palette...",
+      "Entering the loom..."
+    ];
+
+    const bar = document.getElementById("preloader-bar");
+    const status = document.getElementById("preloader-status");
+    const preloader = document.getElementById("preloader");
+
+    const splineFrame = document.getElementById("spline-embed");
+
+    // Fade in spline after preloader
+    function showSpline() {
+      splineFrame.style.opacity = "1";
+    }
+
+    let current = 0;
+    let progress = 0;
+
+    // Set initial hidden states for hero elements
+    document.querySelector(".hero-sub").style.transform = "translateY(30px)";
+    document.querySelector(".hero-ctas").style.transform = "translateY(20px)";
+
+    const statusInterval = setInterval(() => {
+      current = (current + 1) % statusMessages.length;
+      status.textContent = statusMessages[current];
+    }, 400);
+
+    const barInterval = setInterval(() => {
+      progress += Math.random() * 18 + 6;
+      if (progress >= 100) {
+        progress = 100;
+        bar.style.width = "100%";
+        clearInterval(barInterval);
+        clearInterval(statusInterval);
+        status.textContent = "Entering the loom...";
+        setTimeout(() => {
+          gsap.to(preloader, {
+            opacity: 0,
+            duration: 1.2,
+            ease: "power2.inOut",
+            onComplete: () => {
+              preloader.style.display = "none";
+              runHeroAnimation();
+            }
+          });
+        }, 600);
+        return;
+      }
+      bar.style.width = progress + "%";
+    }, 220);
+
+    function runHeroAnimation() {
+      showSpline();
+      gsap.to(".hero-label", { opacity: 1, duration: 0.8, delay: 0.1 });
+      gsap.to(".hero-line", {
+        clipPath: "inset(0 0% 0 0)",
+        duration: 1.1,
+        ease: "power4.out",
+        stagger: 0.15,
+        delay: 0.3
+      });
+      gsap.to(".hero-sub", { opacity: 1, y: 0, duration: 0.8, delay: 0.7 });
+      gsap.to(".hero-ctas", { opacity: 1, y: 0, duration: 0.8, delay: 0.9 });
+      gsap.to(".scroll-indicator", { opacity: 1, duration: 0.8, delay: 1.2 });
+    }
+
+    // 5. Collections ScrollTrigger animations
+    gsap.utils.toArray(".col-card").forEach((card, i) => {
+      gsap.from(card, {
+        y: 80,
+        opacity: 0,
+        rotationY: 10,
+        scale: 0.95,
+        duration: 1,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: card,
+          start: "top 90%",
+          toggleActions: "play none none reverse"
+        },
+        delay: i * 0.12
+      });
+    });
+
+    gsap.from(".section-heading", {
+      y: 50, opacity: 0, duration: 1, ease: "power3.out",
+      scrollTrigger: {
+        trigger: "#collections",
+        start: "top 85%",
+        toggleActions: "play none none reverse"
+      }
+    });
+
+    gsap.from(".section-eyebrow", {
+      y: 20, opacity: 0, duration: 0.7, ease: "power2.out",
+      scrollTrigger: {
+        trigger: "#collections",
+        start: "top 85%",
+        toggleActions: "play none none reverse"
+      }
+    });
+
+    gsap.utils.toArray(".fabric-panel").forEach((panel, i) => {
+      gsap.from(panel.querySelector(".fabric-panel-name") || panel, {
+        x: -60, opacity: 0, duration: 1, ease: "power3.out",
+        scrollTrigger: {
+          trigger: panel,
+          start: "top 80%",
+          toggleActions: "play none none reverse"
+        }
+      });
+      gsap.from(panel.querySelector(".fabric-swatch-card") || panel, {
+        x: 60, opacity: 0, duration: 1, ease: "power3.out",
+        scrollTrigger: {
+          trigger: panel,
+          start: "top 80%",
+          toggleActions: "play none none reverse"
+        }
+      });
+    });
+
+    // 6. Stats CountUp animation
+    document.querySelectorAll(".stat-number").forEach(el => {
+      const target = el.textContent;
+      const isPlus = target.includes("+");
+      const isK = target.includes("K");
+      const isPercent = target.includes("%");
+      const num = parseFloat(target.replace(/[^0-9.]/g, ""));
+
+      gsap.from({ val: 0 }, {
+        val: num,
+        duration: 2,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: "#stats-section",
+          start: "top 80%",
+          toggleActions: "play none none none"
+        },
+        onUpdate: function() {
+          const v = Math.round(this.targets()[0].val);
+          el.textContent = v + (isK ? "K+" : isPlus ? "+" : isPercent ? "%" : "");
+        }
+      });
+    });
+
+    // 7. Feature cards scroll animation
+    gsap.from(".feature-card", {
+      y: 50,
+      opacity: 0,
+      duration: 0.8,
+      stagger: 0.15,
+      ease: "power3.out",
+      scrollTrigger: {
+        trigger: ".features-grid",
+        start: "top 85%",
+        toggleActions: "play none none reverse"
+      }
+    });
+
+    // 8. Testimonials scroll animation
+    gsap.from(".testi-card", {
+      rotateX: 15,
+      opacity: 0,
+      duration: 0.9,
+      stagger: 0.15,
+      ease: "power3.out",
+      scrollTrigger: {
+        trigger: "#testimonials",
+        start: "top 85%",
+        toggleActions: "play none none reverse"
+      }
+    });
+
+    // 9. Contact split animation
+    gsap.from(".contact-left", {
+      x: -60, opacity: 0, duration: 1,
+      ease: "power3.out",
+      scrollTrigger: {
+        trigger: "#contact",
+        start: "top 80%",
+        toggleActions: "play none none reverse"
+      }
+    });
+    gsap.from(".contact-form", {
+      x: 60, opacity: 0, duration: 1,
+      ease: "power3.out",
+      scrollTrigger: {
+        trigger: "#contact",
+        start: "top 80%",
+        toggleActions: "play none none reverse"
+      }
+    });
+
+    // Section fade-out animations on scroll
+    ["#hero", "#collections", "#fabric-story", "#stats-section", 
+     "#testimonials", "#contact"].forEach(sel => {
+      const el = document.querySelector(sel);
+      if (!el) return;
+      gsap.to(el, {
+        opacity: 0,
+        y: -40,
+        ease: "none",
+        scrollTrigger: {
+          trigger: el,
+          start: "bottom 60%",
+          end: "bottom 10%",
+          scrub: true
+        }
+      });
+    });
+
+    // Feature cards + testimonials fade out
+    [".features-grid", ".testi-grid"].forEach(sel => {
+      const el = document.querySelector(sel);
+      if (!el) return;
+      gsap.to(el, {
+        opacity: 0,
+        y: -30,
+        ease: "none",
+        scrollTrigger: {
+          trigger: el,
+          start: "bottom 50%",
+          end: "bottom 5%",
+          scrub: true
+        }
+      });
+    });
+
+    // 10. Three.js scene setup
+    const canvas = document.getElementById("webgl-canvas");
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x080604, 1);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(
+      60, window.innerWidth / window.innerHeight, 0.1, 100
+    );
+    camera.position.z = 5;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0xC9A84C, 1.5, 20);
+    pointLight.position.set(3, 3, 3);
+    scene.add(pointLight);
+
+    const pointLight2 = new THREE.PointLight(0xC9A84C, 2, 15);
+    pointLight2.position.set(-3, -2, 2);
+    // scene.add(pointLight2);
+
+    const pointLight3 = new THREE.PointLight(0xffffff, 0.8, 10);
+    pointLight3.position.set(0, 4, 3);
+    // scene.add(pointLight3);
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    let mouseX = 0, mouseY = 0;
+    let targetX = 0, targetY = 0;
+    window.addEventListener("mousemove", (e) => {
+      mouseX = (e.clientX / window.innerWidth - 0.5);
+      mouseY = (e.clientY / window.innerHeight - 0.5);
+    });
+
+    const clock = new THREE.Clock();
+
+    // Floating geometric gold rings
+    const ringGroup = new THREE.Group();
+    const ringData = [
+      { r: 1.8, tube: 0.012, x: 3.5, y: 0.5, z: -1, rx: 0.4, ry: 0.2 },
+      { r: 1.1, tube: 0.008, x: -3.2, y: 1.2, z: -0.5, rx: -0.3, ry: 0.5 },
+      { r: 2.4, tube: 0.006, x: 1, y: -1.5, z: -2, rx: 1.2, ry: 0.3 },
+      { r: 0.7, tube: 0.01, x: -1.5, y: 2, z: 0, rx: 0.6, ry: -0.4 },
+    ];
+    ringData.forEach(d => {
+      const geo = new THREE.TorusGeometry(d.r, d.tube, 8, 80);
+      const mat = new THREE.MeshBasicMaterial({
+        color: 0xC9A84C, transparent: true, opacity: 0.5
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(d.x, d.y, d.z);
+      mesh.rotation.set(d.rx, d.ry, 0);
+      ringGroup.add(mesh);
+    });
+    // scene.add(ringGroup);
+
+    // Full screen fabric background
+    const fabricGeo = new THREE.PlaneGeometry(16, 10, 80, 60);
+
+    const fabricMat = new THREE.ShaderMaterial({
+      side: THREE.DoubleSide,
+      transparent: true,
+      uniforms: {
+        uTime:   { value: 0 },
+        uScroll: { value: 0 }
+      },
+      vertexShader: `
+        uniform float uTime;
+        uniform float uScroll;
+        varying vec2 vUv;
+        varying float vElevation;
+        void main() {
+          vUv = uv;
+          vec3 pos = position;
+          float a = sin(pos.x * 0.6 + uTime * 0.5) * 1.2;
+          float b = cos(pos.y * 0.5 + uTime * 0.4) * 0.9;
+          float c = sin((pos.x + pos.y) * 0.8 + uTime * 0.7) * 0.5;
+          float scroll = sin(pos.x * 3.0 + uScroll * 10.0) * uScroll * 1.8
+                       + cos(pos.y * 2.5 + uScroll * 8.0) * uScroll * 1.2;
+          pos.z += a + b + c + scroll;
+          vElevation = pos.z;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos,1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec2 vUv;
+        varying float vElevation;
+        uniform float uTime;
+        uniform float uScroll;
+        void main() {
+          vec2 uv = vUv;
+          float elev = (vElevation + 2.0) / 4.0;
+          
+          vec3 col1 = vec3(0.45, 0.08, 0.05);
+          vec3 col2 = vec3(0.18, 0.05, 0.03);
+          vec3 col3 = vec3(0.72, 0.58, 0.22);
+          
+          vec3 base = mix(col2, col1, elev);
+          
+          float goldEdge = smoothstep(0.0,0.05,uv.y)*smoothstep(1.0,0.95,uv.y);
+          goldEdge = 1.0 - goldEdge;
+          base = mix(base, col3, goldEdge * 0.7);
+          
+          float highlight = pow(elev, 3.0) * 0.4;
+          base += highlight * col3;
+          
+          float shimmer = step(0.96, sin(uv.x*100.0-uTime*2.0)*
+                         sin(uv.y*60.0+uTime)) * goldEdge;
+          base += shimmer * col3;
+          
+          float alpha = 0.82 - uScroll * 0.4;
+          gl_FragColor = vec4(base, alpha);
+        }
+      `
+    });
+
+    const fabric = new THREE.Mesh(fabricGeo, fabricMat);
+    fabric.position.set(0, 0, 1);
+    fabric.rotation.set(0.3, 0.2, 0.1);
+    // scene.add(fabric);
+    fabric.visible = false;
+    fabric.material.opacity = 0;
+
+    const loader = new THREE.GLTFLoader();
+    let tshirt = null;
+    let tshirtScale = 1;
+    let tshirtBaseX = 0;
+    let tshirtBaseY = 0;
+
+    loader.load('./amazigh_t-shirt.glb', (gltf) => {
+      tshirt = gltf.scene;
+      
+      // Auto-scale to fit screen
+      const box = new THREE.Box3().setFromObject(tshirt);
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = 9.0 / maxDim;
+      tshirt.scale.setScalar(scale);
+      tshirtScale = scale;
+      
+      // Center it
+      const center = box.getCenter(new THREE.Vector3());
+      tshirtBaseX = -center.x * scale + 1.0;
+      tshirtBaseY = -center.y * scale - 0.5;
+      tshirt.position.set(
+        tshirtBaseX,
+        tshirtBaseY,
+        -center.z * scale
+      );
+      
+      // Keep original GLB materials — only enable shadows
+      tshirt.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+        }
+      });
+      
+      // Start off screen right, fly in
+      tshirt.position.x += 12;
+      tshirt.rotation.y = -Math.PI * 0.3;
+      scene.add(tshirt);
+      
+      // Fly in animation on load
+      gsap.to(tshirt.position, {
+        x: tshirt.position.x - 12,
+        duration: 2.0,
+        delay: 0.5,
+        ease: "power4.out"
+      });
+      gsap.to(tshirt.rotation, {
+        y: 0.2,
+        duration: 2.0,
+        delay: 0.5,
+        ease: "power4.out"
+      });
+    }, undefined, (err) => {
+      console.error('GLB load error:', err);
+    });
+
+    // Scroll drives shirt — stays in frame
+    window.addEventListener("scroll", () => {
+      const sp = window.scrollY / 
+        (document.body.scrollHeight - window.innerHeight);
+
+      // Spline scroll effects
+      splineFrame.style.opacity = Math.max(0, 1 - sp * 4).toString();
+      splineFrame.style.transform = 
+        `translateY(${sp * -80}px) scale(${1 - sp * 0.1})`;
+
+      if (!tshirt) return;
+
+      const baseX = tshirtBaseX;
+      const baseY = tshirtBaseY;
+
+      // Gentle continuous rotation — never leaves frame
+      const rotY = 0.2 + sp * Math.PI * 2;
+      const rotX = Math.sin(sp * Math.PI) * 0.3;
+      const driftX = Math.sin(sp * Math.PI * 2) * 1.5;
+      const driftY = Math.cos(sp * Math.PI) * 0.8;
+      const driftZ = -sp * 1.5;
+      const fadeScale = tshirtScale * (1 - sp * 0.15);
+
+      gsap.to(tshirt.rotation, {
+        y: rotY,
+        x: rotX,
+        z: Math.sin(sp * Math.PI * 3) * 0.1,
+        duration: 0.8,
+        ease: "power2.out",
+        overwrite: true
+      });
+      gsap.to(tshirt.position, {
+        x: baseX + driftX,
+        y: baseY + driftY,
+        z: driftZ,
+        duration: 0.8,
+        ease: "power2.out",
+        overwrite: true
+      });
+      gsap.to(tshirt.scale, {
+        x: fadeScale,
+        y: fadeScale,
+        z: fadeScale,
+        duration: 0.8,
+        overwrite: true
+      });
+    });
+
+    // Gold particle system
+    const particleCount = 1200;
+    const positions = new Float32Array(particleCount * 3);
+    const speeds = new Float32Array(particleCount);
+
+    for (let i = 0; i < particleCount; i++) {
+      positions[i * 3]     = (Math.random() - 0.5) * 12;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 12;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 4;
+      speeds[i] = 0.002 + Math.random() * 0.003;
+    }
+
+    const particleGeo = new THREE.BufferGeometry();
+    particleGeo.setAttribute("position",
+      new THREE.BufferAttribute(positions, 3));
+
+    const particleMat = new THREE.PointsMaterial({
+      color: 0xC9A84C,
+      size: 0.025,
+      sizeAttenuation: true,
+      transparent: true,
+      opacity: 0.7
+    });
+
+    const particles = new THREE.Points(particleGeo, particleMat);
+    scene.add(particles);
+
+    // Ambient glow blobs
+    const blobGeo = new THREE.SphereGeometry(2.5, 16, 16);
+
+    const blob1Mat = new THREE.MeshBasicMaterial({
+      color: 0x2a1800,
+      transparent: true,
+      opacity: 0.08,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    const blob1 = new THREE.Mesh(blobGeo, blob1Mat);
+    blob1.position.set(-3, 1, -4);
+    scene.add(blob1);
+    blob1.visible = false;
+
+    const blob2Mat = new THREE.MeshBasicMaterial({
+      color: 0x1a1000,
+      transparent: true,
+      opacity: 0.06,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    const blob2 = new THREE.Mesh(blobGeo, blob2Mat);
+    blob2.position.set(3, -1, -5);
+    scene.add(blob2);
+    blob2.visible = false;
+
+    // Scroll-driven scene transitions
+
+    const jewelGeo = new THREE.IcosahedronGeometry(0.08, 0);
+    const jewelMat = new THREE.MeshStandardMaterial({
+      color: 0xC9A84C, metalness: 1, roughness: 0.1
+    });
+    const jewels = [];
+    for (let i = 0; i < 80; i++) {
+      const j = new THREE.Mesh(jewelGeo, jewelMat);
+      j.position.set(
+        (Math.random() - 0.5) * 14,
+        (Math.random() - 0.5) * 10,
+        (Math.random() - 0.5) * 4
+      );
+      j.visible = false;
+      scene.add(j);
+      jewels.push(j);
+    }
+
+    let currentAct = 0;
+
+    function goToAct(act) {
+      if (act === currentAct) return;
+      currentAct = act;
+
+      if (act === 1) {
+        ringGroup.children.forEach(r => gsap.to(r.material, { opacity: 0.5, duration: 1 }));
+        gsap.to(particles.material, { opacity: 0.7, duration: 1 });
+        jewels.forEach(j => j.visible = false);
+      }
+      if (act === 2) {
+        ringGroup.children.forEach(r => gsap.to(r.material, { opacity: 0.15, duration: 1.2 }));
+        gsap.to(particles.material, { opacity: 0.25, duration: 1 });
+        jewels.forEach(j => j.visible = false);
+      }
+      if (act === 3) {
+        ringGroup.children.forEach(r => gsap.to(r.material, { opacity: 0.05, duration: 1 }));
+        gsap.to(particles.material, { opacity: 0.15, duration: 1 });
+        jewels.forEach(j => { j.visible = true; });
+      }
+    }
+
+    window.addEventListener("scroll", () => {
+      const y = window.scrollY;
+      const vh = window.innerHeight;
+      if (y < vh * 1.2)       goToAct(1);
+      else if (y < vh * 3.5)  goToAct(2);
+      else                     goToAct(3);
+    });
+
+    let lastTime = 0;
+    const fpsInterval = 1000 / 30; // Force 30 FPS
+
+    function animate(time) {
+      requestAnimationFrame(animate);
+
+      // 30 FPS Throttle
+      if (!time) time = 0;
+      if (time - lastTime < fpsInterval) return;
+      lastTime = time;
+
+      const elapsed = clock.getElapsedTime();
+
+      targetX = mouseX * 0.6;
+      targetY = -mouseY * 0.4;
+      camera.position.x += (targetX - camera.position.x) * 0.05;
+      camera.position.y += (targetY - camera.position.y) * 0.05;
+      camera.lookAt(scene.position);
+
+      ringGroup.rotation.y += 0.001;
+      ringGroup.rotation.x += 0.0005;
+
+      const pos = particleGeo.attributes.position.array;
+      for (let i = 0; i < particleCount; i++) {
+        pos[i * 3 + 1] += speeds[i];
+        pos[i * 3]     += Math.sin(elapsed + i) * 0.0003;
+        if (pos[i * 3 + 1] > 6) pos[i * 3 + 1] = -6;
+      }
+      particleGeo.attributes.position.needsUpdate = true;
+
+      if (fabricMat.uniforms) {
+        fabricMat.uniforms.uTime.value = elapsed;
+      }
+      // Rings slowly rotate
+      ringGroup.rotation.y = elapsed * 0.05;
+      ringGroup.rotation.x = Math.sin(elapsed * 0.1) * 0.1;
+
+      blob1.position.x = -3 + Math.sin(elapsed * 0.3) * 0.4;
+      blob1.position.y = 1 + Math.cos(elapsed * 0.2) * 0.3;
+      blob2.position.x = 3 + Math.cos(elapsed * 0.25) * 0.4;
+      blob2.position.y = -1 + Math.sin(elapsed * 0.35) * 0.3;
+
+      jewels.forEach((j, i) => {
+        j.position.y += 0.003;
+        if (j.position.y > 5) j.position.y = -5;
+        j.scale.setScalar(1 + Math.sin(elapsed * 2 + i) * 0.15);
+      });
+
+      renderer.render(scene, camera);
+
+      if (tshirt) {
+        tshirt.rotation.y += 0.006;
+        tshirt.position.y += Math.sin(elapsed * 0.8) * 0.001;
+      }
+    }
+    animate();
+  </script>
+
+</body>
+</html>
