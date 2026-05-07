@@ -2099,6 +2099,14 @@
     let tshirtScale = 1;
     let tshirtBaseX = 0;
     let tshirtBaseY = 0;
+    
+    // Smooth scroll target variables
+    let targetTshirtParams = {
+      rotX: 0, rotY: 0, rotZ: 0,
+      posX: 0, posY: 0, posZ: 0,
+      scale: 1,
+      isScrolling: false
+    };
 
     loader.load('assets/models/amazigh_t-shirt.glb', (gltf) => {
       tshirt = gltf.scene;
@@ -2173,29 +2181,17 @@
       const driftZ = -sp * 1.5;
       const fadeScale = tshirtScale * (1 - sp * 0.15);
 
-      gsap.to(tshirt.rotation, {
-        y: rotY,
-        x: rotX,
-        z: Math.sin(sp * Math.PI * 3) * 0.1,
-        duration: 0.8,
-        ease: "power2.out",
-        overwrite: true
-      });
-      gsap.to(tshirt.position, {
-        x: baseX + driftX,
-        y: baseY + driftY,
-        z: driftZ,
-        duration: 0.8,
-        ease: "power2.out",
-        overwrite: true
-      });
-      gsap.to(tshirt.scale, {
-        x: fadeScale,
-        y: fadeScale,
-        z: fadeScale,
-        duration: 0.8,
-        overwrite: true
-      });
+      // Update target values for lerping
+      targetTshirtParams = {
+        rotX: rotX,
+        rotY: rotY,
+        rotZ: Math.sin(sp * Math.PI * 3) * 0.1,
+        posX: baseX + driftX,
+        posY: baseY + driftY,
+        posZ: driftZ,
+        scale: fadeScale,
+        isScrolling: true
+      };
     });
 
     // Gold particle system
@@ -2353,8 +2349,25 @@
       renderer.render(scene, camera);
 
       if (tshirt) {
-        tshirt.rotation.y += 0.006;
-        tshirt.position.y += Math.sin(elapsed * 0.8) * 0.001;
+        if (targetTshirtParams.isScrolling) {
+          // Smooth Lerp physics for scroll (buttery smooth 60/30fps)
+          const lerpFactor = 0.1;
+          tshirt.rotation.x += (targetTshirtParams.rotX - tshirt.rotation.x) * lerpFactor;
+          tshirt.rotation.y += (targetTshirtParams.rotY - tshirt.rotation.y) * lerpFactor;
+          tshirt.rotation.z += (targetTshirtParams.rotZ - tshirt.rotation.z) * lerpFactor;
+          
+          tshirt.position.x += (targetTshirtParams.posX - tshirt.position.x) * lerpFactor;
+          tshirt.position.y += (targetTshirtParams.posY - tshirt.position.y) * lerpFactor;
+          tshirt.position.z += (targetTshirtParams.posZ - tshirt.position.z) * lerpFactor;
+          
+          tshirt.scale.x += (targetTshirtParams.scale - tshirt.scale.x) * lerpFactor;
+          tshirt.scale.y += (targetTshirtParams.scale - tshirt.scale.y) * lerpFactor;
+          tshirt.scale.z += (targetTshirtParams.scale - tshirt.scale.z) * lerpFactor;
+        } else {
+          // Idle floating animation before scroll happens
+          tshirt.rotation.y += 0.006;
+          tshirt.position.y += Math.sin(elapsed * 0.8) * 0.001;
+        }
       }
     }
     animate();
